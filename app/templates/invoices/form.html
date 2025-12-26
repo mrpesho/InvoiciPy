@@ -1,0 +1,271 @@
+{% extends "layout.html" %}
+
+{% block title %}{% if invoice %}Edit Invoice{% else %}New Invoice{% endif %} - InvoiciPy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% if invoice %}Edit {% if invoice.number %}Invoice {{ invoice.number }}{% else %}Draft #{{ invoice.id }}{% endif %}{% else %}New Invoice{% endif %}</h1>
+</div>
+
+<form method="post">
+    <div class="card">
+        <h3 class="mb-2">Invoice Details</h3>
+        <div class="form-row-3">
+            <div class="form-group">
+                <label for="customer_id">Customer *</label>
+                <select name="customer_id" id="customer_id" class="form-control" required>
+                    <option value="">Select a customer...</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}" {% if invoice and invoice.customer_id == customer.id %}selected{% endif %}>
+                        {{ customer.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="invoice_number">Invoice Number</label>
+                <input type="text" name="invoice_number" id="invoice_number" class="form-control"
+                    value="{{ invoice.number if invoice and invoice.number else next_number }}"
+                    placeholder="Auto-generated on issue">
+                <small class="text-muted">Used when issuing. Leave blank for auto-generated.</small>
+            </div>
+            <div class="form-group">
+                <label for="template">Template</label>
+                <select name="template" id="template" class="form-control">
+                    {% for t in templates %}
+                    <option value="{{ t }}" {% if invoice and invoice.template == t %}selected{% elif not invoice and t == 'default' %}selected{% endif %}>
+                        {{ t|title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row-3">
+            <div class="form-group">
+                <label for="currency">Currency</label>
+                <select name="currency" id="currency" class="form-control">
+                    <option value="EUR" {% if invoice and invoice.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                    <option value="USD" {% if invoice and invoice.currency == 'USD' %}selected{% endif %}>USD</option>
+                    <option value="GBP" {% if invoice and invoice.currency == 'GBP' %}selected{% endif %}>GBP</option>
+                </select>
+                <small class="text-muted">&nbsp;</small>
+            </div>
+            <div class="form-group" id="exchange-rate-group" style="visibility: hidden;">
+                <label for="exchange_rate">Exchange Rate to {{ native_currency }}</label>
+                <input type="number" name="exchange_rate" id="exchange_rate" class="form-control"
+                    step="0.000001" min="0" value="{{ invoice.exchange_rate if invoice and invoice.exchange_rate else '1.0' }}"
+                    placeholder="1.0">
+                <small class="text-muted">1 <span id="selected-currency">USD</span> = X {{ native_currency }}</small>
+            </div>
+        </div>
+
+        <div class="form-row-4">
+            <div class="form-group">
+                <label for="issue_date">Issue Date *</label>
+                <input type="date" name="issue_date" id="issue_date" class="form-control" required
+                    value="{{ invoice.issue_date if invoice else today }}">
+            </div>
+            <div class="form-group">
+                <label for="delivery_date">Delivery Date</label>
+                <input type="date" name="delivery_date" id="delivery_date" class="form-control"
+                    value="{{ invoice.delivery_date if invoice and invoice.delivery_date else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="payment_days">Payment Terms</label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="number" id="payment_days" class="form-control" style="width: 80px;"
+                        value="{{ default_payment_days }}" min="0" max="365">
+                    <span>days</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="due_date">Due Date *</label>
+                <input type="date" name="due_date" id="due_date" class="form-control" required
+                    value="{{ invoice.due_date if invoice else default_due }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 class="mb-2">Items</h3>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 40%">Description</th>
+                    <th style="width: 10%">Qty</th>
+                    <th style="width: 10%">Unit</th>
+                    <th style="width: 15%">Unit Price</th>
+                    <th style="width: 10%">Tax %</th>
+                    <th style="width: 15%"></th>
+                </tr>
+            </thead>
+            <tbody id="items-body">
+                {% if invoice %}
+                    {% for item in invoice.items %}
+                    <tr>
+                        <td><input type="text" name="item_description[]" value="{{ item.description }}" placeholder="Description" required></td>
+                        <td><input type="number" name="item_quantity[]" value="{{ item.quantity }}" step="0.01" min="0" placeholder="1"></td>
+                        <td><input type="text" name="item_unit[]" value="{{ item.unit }}" placeholder="pcs"></td>
+                        <td><input type="number" name="item_price[]" value="{{ item.unit_price }}" step="0.01" min="0" placeholder="0.00"></td>
+                        <td><input type="number" name="item_tax[]" value="{{ item.tax_rate }}" step="0.01" min="0" placeholder="0"></td>
+                        <td><button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">Remove</button></td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td><input type="text" name="item_description[]" placeholder="Description" required></td>
+                    <td><input type="number" name="item_quantity[]" value="1" step="0.01" min="0" placeholder="1"></td>
+                    <td><input type="text" name="item_unit[]" value="pcs" placeholder="pcs"></td>
+                    <td><input type="number" name="item_price[]" step="0.01" min="0" placeholder="0.00"></td>
+                    <td><input type="number" name="item_tax[]" value="0" step="0.01" min="0" placeholder="0"></td>
+                    <td><button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">Remove</button></td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-secondary mt-2" onclick="addRow()">Add Item</button>
+    </div>
+
+    <div class="card">
+        <h3 class="mb-2">Optional Texts</h3>
+        {% for text in optional_texts %}
+        <div class="form-check">
+            <input type="checkbox" name="optional_texts" value="{{ text.key }}" id="opt_{{ text.key }}"
+                {% if text.key in default_enabled %}checked{% endif %}>
+            <label for="opt_{{ text.key }}">{{ text.label }}</label>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card">
+        <div class="form-group">
+            <label for="notes">Notes (optional)</label>
+            <textarea name="notes" id="notes" class="form-control" rows="3">{{ invoice.notes if invoice else '' }}</textarea>
+        </div>
+    </div>
+
+    <div class="actions">
+        {% if invoice %}
+            <button type="submit" name="action" value="save" class="btn btn-secondary">Update Draft</button>
+            <button type="submit" name="action" value="issue" class="btn btn-success">Update & Issue</button>
+        {% else %}
+            <button type="submit" name="action" value="save" class="btn btn-secondary">Save as Draft</button>
+            <button type="submit" name="action" value="issue" class="btn btn-success">Create & Issue</button>
+        {% endif %}
+        <a href="{{ url_for('invoices.list_invoices') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function addRow() {
+    const tbody = document.getElementById('items-body');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td><input type="text" name="item_description[]" placeholder="Description" required></td>
+        <td><input type="number" name="item_quantity[]" value="1" step="0.01" min="0" placeholder="1"></td>
+        <td><input type="text" name="item_unit[]" value="pcs" placeholder="pcs"></td>
+        <td><input type="number" name="item_price[]" step="0.01" min="0" placeholder="0.00"></td>
+        <td><input type="number" name="item_tax[]" value="0" step="0.01" min="0" placeholder="0"></td>
+        <td><button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)">Remove</button></td>
+    `;
+    tbody.appendChild(row);
+}
+
+function removeRow(btn) {
+    const tbody = document.getElementById('items-body');
+    if (tbody.children.length > 1) {
+        btn.closest('tr').remove();
+    }
+}
+
+// Payment terms / due date calculation
+const issueDate = document.getElementById('issue_date');
+const dueDate = document.getElementById('due_date');
+const paymentDays = document.getElementById('payment_days');
+const customerSelect = document.getElementById('customer_id');
+
+function addDays(dateStr, days) {
+    const date = new Date(dateStr);
+    date.setDate(date.getDate() + parseInt(days));
+    return date.toISOString().split('T')[0];
+}
+
+function daysBetween(date1Str, date2Str) {
+    const date1 = new Date(date1Str);
+    const date2 = new Date(date2Str);
+    const diffTime = date2 - date1;
+    return Math.round(diffTime / (1000 * 60 * 60 * 24));
+}
+
+function updateDueDate() {
+    if (issueDate.value && paymentDays.value) {
+        dueDate.value = addDays(issueDate.value, paymentDays.value);
+    }
+}
+
+function updatePaymentDays() {
+    if (issueDate.value && dueDate.value) {
+        const days = daysBetween(issueDate.value, dueDate.value);
+        if (days >= 0) {
+            paymentDays.value = days;
+        }
+    }
+}
+
+// When issue date changes, recalculate due date
+issueDate.addEventListener('change', updateDueDate);
+
+// When payment days changes, recalculate due date
+paymentDays.addEventListener('input', updateDueDate);
+
+// When due date changes, recalculate payment days
+dueDate.addEventListener('change', updatePaymentDays);
+
+// When customer changes, fetch their payment terms
+customerSelect.addEventListener('change', async function() {
+    if (this.value) {
+        try {
+            const response = await fetch(`/customers/${this.value}/json`);
+            if (response.ok) {
+                const customer = await response.json();
+                if (customer.payment_terms !== null) {
+                    paymentDays.value = customer.payment_terms;
+                    updateDueDate();
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch customer:', e);
+        }
+    }
+});
+
+// Initialize payment days from current dates on page load
+updatePaymentDays();
+
+// Exchange rate visibility based on currency
+const currencySelect = document.getElementById('currency');
+const exchangeRateGroup = document.getElementById('exchange-rate-group');
+const exchangeRateInput = document.getElementById('exchange_rate');
+const selectedCurrencySpan = document.getElementById('selected-currency');
+const nativeCurrency = '{{ native_currency }}';
+
+function updateExchangeRateVisibility() {
+    const currency = currencySelect.value;
+    if (currency !== nativeCurrency) {
+        exchangeRateGroup.style.visibility = 'visible';
+        selectedCurrencySpan.textContent = currency;
+    } else {
+        exchangeRateGroup.style.visibility = 'hidden';
+        exchangeRateInput.value = '1.0';
+    }
+}
+
+currencySelect.addEventListener('change', updateExchangeRateVisibility);
+
+// Initialize on page load
+updateExchangeRateVisibility();
+</script>
+{% endblock %}

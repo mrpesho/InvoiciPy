@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ invoice.display_number }} - InvoiciPy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ invoice.display_number }}</h1>
+    <div class="actions">
+        {% if invoice.status == 'draft' %}
+        <a href="{{ url_for('invoices.edit_invoice', id=invoice.id) }}" class="btn btn-secondary">Edit</a>
+        <form action="{{ url_for('invoices.issue_invoice', id=invoice.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-success">Issue</button>
+        </form>
+        <form action="{{ url_for('invoices.delete_invoice', id=invoice.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Delete this invoice?')">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+        {% endif %}
+        {% if invoice.status == 'issued' %}
+        <form action="{{ url_for('invoices.mark_paid', id=invoice.id) }}" method="post" style="display: inline;">
+            <button type="submit" class="btn btn-success">Mark as Paid</button>
+        </form>
+        {% endif %}
+        <a href="{{ url_for('invoices.preview_invoice', id=invoice.id) }}" class="btn btn-secondary" target="_blank">Preview</a>
+        <a href="{{ url_for('invoices.download_pdf', id=invoice.id) }}" class="btn btn-primary">Download PDF</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="detail-grid">
+        <div class="detail-section">
+            <h3>Invoice Details</h3>
+            <p><strong>Number:</strong> {{ invoice.display_number }}</p>
+            <p><strong>Status:</strong> <span class="badge badge-{{ invoice.status }}">{{ invoice.status }}</span></p>
+            <p><strong>Template:</strong> {{ invoice.template }}</p>
+            <p><strong>Currency:</strong> {{ invoice.currency }}</p>
+        </div>
+        <div class="detail-section">
+            <h3>Dates</h3>
+            <p><strong>Issue Date:</strong> {{ invoice.issue_date }}</p>
+            {% if invoice.delivery_date %}
+            <p><strong>Delivery Date:</strong> {{ invoice.delivery_date }}</p>
+            {% endif %}
+            <p><strong>Due Date:</strong> {{ invoice.due_date }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="detail-section">
+        <h3>Customer</h3>
+        <p><strong>{{ invoice.customer.name }}</strong></p>
+        {% if invoice.customer.legal_name %}<p>{{ invoice.customer.legal_name }}</p>{% endif %}
+        {% if invoice.customer.address_line1 %}<p>{{ invoice.customer.address_line1 }}</p>{% endif %}
+        {% if invoice.customer.address_line2 %}<p>{{ invoice.customer.address_line2 }}</p>{% endif %}
+        <p>{{ invoice.customer.city }}{% if invoice.customer.state %}, {{ invoice.customer.state }}{% endif %} {{ invoice.customer.zipcode }}, {{ invoice.customer.country }}</p>
+        {% if invoice.customer.vat_number %}<p>VAT: {{ invoice.customer.vat_number }}</p>{% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <h3 class="mb-2">Items</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th class="text-right">Quantity</th>
+                <th>Unit</th>
+                <th class="text-right">Unit Price</th>
+                <th class="text-right">Tax</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in invoice.items %}
+            <tr>
+                <td>{{ item.description }}</td>
+                <td class="text-right">{{ "%.2f"|format(item.quantity) }}</td>
+                <td>{{ item.unit }}</td>
+                <td class="text-right">{{ "%.2f"|format(item.unit_price) }}</td>
+                <td class="text-right">{{ "%.0f"|format(item.tax_rate) }}%</td>
+                <td class="text-right">{{ "%.2f"|format(item.line_total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5" class="text-right"><strong>Subtotal:</strong></td>
+                <td class="text-right">{{ "%.2f"|format(invoice.subtotal) }} {{ invoice.currency }}</td>
+            </tr>
+            <tr>
+                <td colspan="5" class="text-right"><strong>Tax:</strong></td>
+                <td class="text-right">{{ "%.2f"|format(invoice.tax_total) }} {{ invoice.currency }}</td>
+            </tr>
+            <tr>
+                <td colspan="5" class="text-right"><strong>Total:</strong></td>
+                <td class="text-right"><strong>{{ "%.2f"|format(invoice.total) }} {{ invoice.currency }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+{% if invoice.notes %}
+<div class="card">
+    <h3 class="mb-1">Notes</h3>
+    <p>{{ invoice.notes }}</p>
+</div>
+{% endif %}
+{% endblock %}

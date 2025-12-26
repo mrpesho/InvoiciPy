@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+
+{% block title %}Customers - InvoiciPy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Customers</h1>
+    <a href="{{ url_for('customers.create_customer') }}" class="btn btn-primary">New Customer</a>
+</div>
+
+<div class="card">
+    <form class="search-form" method="get">
+        <input type="text" name="search" class="form-control" placeholder="Search customers..." value="{{ search }}">
+        <button type="submit" class="btn btn-secondary">Search</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>VAT Number</th>
+                <th>City</th>
+                <th>Country</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td><a href="{{ url_for('customers.get_customer', id=customer.id) }}">{{ customer.name }}</a></td>
+                <td>{{ customer.email or '-' }}</td>
+                <td>{{ customer.vat_number or '-' }}</td>
+                <td>{{ customer.city or '-' }}</td>
+                <td>{{ customer.country or '-' }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('customers.edit_customer', id=customer.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                    <form action="{{ url_for('customers.delete_customer', id=customer.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Delete this customer?')">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-muted" style="text-align: center; padding: 2rem;">
+                    No customers found. <a href="{{ url_for('customers.create_customer') }}">Add your first customer</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

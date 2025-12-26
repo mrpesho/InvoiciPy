@@ -1,0 +1,85 @@
+{% extends "pdf/base.html" %}
+
+{% block extra_styles %}
+.header {
+    border-bottom: 1px solid #ddd;
+}
+table thead th {
+    background: #f5f5f5;
+    color: #333;
+}
+{% endblock %}
+
+{% block content %}
+<div class="header">
+    <div class="company-info">
+        <h1>{{ company.name }}</h1>
+        <p>{{ company.address }}, {{ company.zipcode }} {{ company.city }}</p>
+    </div>
+    <div class="invoice-title">
+        <h2>INVOICE</h2>
+        <div class="invoice-number">{{ invoice.number }}</div>
+    </div>
+</div>
+
+<div class="parties">
+    <div class="party">
+        <h3>To</h3>
+        <div class="name">{{ customer.name }}</div>
+        {% if customer.address_line1 %}<p>{{ customer.address_line1 }}</p>{% endif %}
+        <p>{{ customer.city }}{% if customer.state %}, {{ customer.state }}{% endif %} {{ customer.zipcode }}, {{ customer.country }}</p>
+    </div>
+    <div class="party" style="text-align: right;">
+        <p><strong>Date:</strong> {{ invoice.issue_date }}</p>
+        <p><strong>Due:</strong> {{ invoice.due_date }}</p>
+    </div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th style="width: 60%">Description</th>
+            <th class="number">Qty</th>
+            <th class="number">Price</th>
+            <th class="number">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item.description }}</td>
+            <td class="number">{{ "%.0f"|format(item.quantity) }} {{ item.unit }}</td>
+            <td class="number">{{ "%.2f"|format(item.unit_price) }}</td>
+            <td class="number">{{ "%.2f"|format(item.line_total) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="totals">
+    <table class="totals-table">
+        {% if totals.tax > 0 %}
+        <tr>
+            <td>Subtotal:</td>
+            <td>{{ "%.2f"|format(totals.subtotal) }} {{ invoice.currency }}</td>
+        </tr>
+        <tr>
+            <td>Tax:</td>
+            <td>{{ "%.2f"|format(totals.tax) }} {{ invoice.currency }}</td>
+        </tr>
+        {% endif %}
+        <tr class="total">
+            <td>Total:</td>
+            <td>{{ "%.2f"|format(totals.total) }} {{ invoice.currency }}</td>
+        </tr>
+    </table>
+</div>
+
+{% if optional_texts %}
+<div class="optional-texts">
+    {% for text in optional_texts %}
+    <p>{{ text }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

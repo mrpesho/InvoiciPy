@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block title %}Invoices {{ selected_year }} - InvoiciPy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Invoices</h1>
+    <a href="{{ url_for('invoices.create_invoice') }}" class="btn btn-primary">New Invoice</a>
+</div>
+
+<div class="year-tabs">
+    {% for year in years %}
+    <a href="{{ url_for('invoices.list_invoices', year=year) }}"
+       class="year-tab {% if year == selected_year %}active{% endif %}">{{ year }}</a>
+    {% endfor %}
+</div>
+
+<div class="sums-grid">
+    <div class="sum-card sum-paid">
+        <div class="label">Paid</div>
+        <div class="value">{{ "%.2f"|format(sums.paid) }} {{ native_currency }}</div>
+    </div>
+    <div class="sum-card sum-pending">
+        <div class="label">Pending</div>
+        <div class="value">{{ "%.2f"|format(sums.pending) }} {{ native_currency }}</div>
+    </div>
+    <div class="sum-card sum-draft">
+        <div class="label">Draft</div>
+        <div class="value">{{ "%.2f"|format(sums.draft) }} {{ native_currency }}</div>
+    </div>
+    <div class="sum-card sum-total">
+        <div class="label">Total</div>
+        <div class="value">{{ "%.2f"|format(sums.total) }} {{ native_currency }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <form class="search-form" method="get">
+        <input type="hidden" name="year" value="{{ selected_year }}">
+        <input type="text" name="search" class="form-control" placeholder="Search invoices..." value="{{ search }}">
+        <select name="status" class="form-control" style="width: 150px;">
+            <option value="">All Status</option>
+            <option value="draft" {% if status == 'draft' %}selected{% endif %}>Draft ({{ stats.draft }})</option>
+            <option value="issued" {% if status == 'issued' %}selected{% endif %}>Issued ({{ stats.issued }})</option>
+            <option value="paid" {% if status == 'paid' %}selected{% endif %}>Paid ({{ stats.paid }})</option>
+        </select>
+        <button type="submit" class="btn btn-secondary">Filter</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Number</th>
+                <th>Customer</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th class="text-right">Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in invoices %}
+            <tr>
+                <td><a href="{{ url_for('invoices.get_invoice', id=invoice.id) }}">{{ invoice.display_number }}</a></td>
+                <td>{{ invoice.customer.name }}</td>
+                <td>{{ invoice.issue_date }}</td>
+                <td>{{ invoice.due_date }}</td>
+                <td class="text-right">{{ "%.2f"|format(invoice.total) }} {{ invoice.currency }}</td>
+                <td><span class="badge badge-{{ invoice.status }}">{{ invoice.status }}</span></td>
+                <td class="actions">
+                    <a href="{{ url_for('invoices.get_invoice', id=invoice.id) }}" class="btn btn-sm btn-secondary">View</a>
+                    <a href="{{ url_for('invoices.download_pdf', id=invoice.id) }}" class="btn btn-sm btn-primary">PDF</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-muted" style="text-align: center; padding: 2rem;">
+                    No invoices for {{ selected_year }}. <a href="{{ url_for('invoices.create_invoice') }}">Create your first invoice</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

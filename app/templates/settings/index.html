@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+
+{% block title %}Settings - InvoiciPy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Settings</h1>
+</div>
+
+<div class="card">
+    <h3 class="mb-2">Company Information</h3>
+    <p class="text-muted mb-2">Configure these values in your environment variables or .env file.</p>
+
+    <div class="detail-grid">
+        <div class="detail-section">
+            <p><strong>Company Name:</strong> {{ company.name }}</p>
+            <p><strong>Legal Name:</strong> {{ company.legal_name }}</p>
+            <p><strong>Registration Number:</strong> {{ company.legal_number or '-' }}</p>
+            <p><strong>VAT Number:</strong> {{ company.vat_number }}</p>
+            <p><strong>Email:</strong> {{ company.email }}</p>
+            <p><strong>Phone:</strong> {{ company.phone or '-' }}</p>
+        </div>
+        <div class="detail-section">
+            <p><strong>Address:</strong> {{ company.address }}</p>
+            <p><strong>City:</strong> {{ company.city }}</p>
+            <p><strong>Postal Code:</strong> {{ company.zipcode }}</p>
+            <p><strong>Country:</strong> {{ company.country }}</p>
+            <p><strong>Bank:</strong> {{ company.bank_name }}</p>
+            <p><strong>IBAN:</strong> {{ company.iban }}</p>
+            <p><strong>SWIFT:</strong> {{ company.swift }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="page-header" style="margin-bottom: 1rem;">
+        <h3>Optional Texts</h3>
+        <a href="{{ url_for('settings.create_optional_text') }}" class="btn btn-primary btn-sm">Add Text</a>
+    </div>
+    <p class="text-muted mb-2">Optional text blocks that can be enabled on invoices.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Label</th>
+                <th>Default Enabled</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for text in optional_texts %}
+            <tr>
+                <td><code>{{ text.key }}</code></td>
+                <td>{{ text.label }}</td>
+                <td>{% if text.default_enabled %}Yes{% else %}No{% endif %}</td>
+                <td class="actions">
+                    <a href="{{ url_for('settings.edit_optional_text', id=text.id) }}" class="btn btn-sm btn-secondary">Edit</a>
+                    <form action="{{ url_for('settings.delete_optional_text', id=text.id) }}" method="post" style="display: inline;" onsubmit="return confirm('Delete this optional text?')">
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="text-muted" style="text-align: center;">No optional texts configured.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

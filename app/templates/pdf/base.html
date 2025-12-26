@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #333;
+        }
+
+        /* Browser preview styles - simulates A4 paper */
+        @media screen {
+            html {
+                background: #525659;
+            }
+            body {
+                background: white;
+                width: 210mm;
+                min-height: 297mm;
+                margin: 20px auto;
+                padding: 2cm;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #2c3e50;
+        }
+
+        .company-info h1 {
+            font-size: 18pt;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .company-info p {
+            color: #666;
+            font-size: 9pt;
+        }
+
+        .invoice-title {
+            text-align: right;
+        }
+
+        .invoice-title h2 {
+            font-size: 24pt;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .invoice-number {
+            font-size: 12pt;
+            color: #666;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-size: 9pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        .status-draft { background: #f39c12; color: white; }
+        .status-issued { background: #3498db; color: white; }
+        .status-paid { background: #27ae60; color: white; }
+
+        .parties {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .party {
+            width: 45%;
+        }
+
+        .party h3 {
+            font-size: 9pt;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .party .name {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .party p {
+            font-size: 9pt;
+            color: #666;
+        }
+
+        .dates {
+            display: flex;
+            justify-content: flex-end;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .date-item {
+            text-align: right;
+        }
+
+        .date-item label {
+            font-size: 8pt;
+            color: #999;
+            text-transform: uppercase;
+        }
+
+        .date-item .value {
+            font-size: 10pt;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        thead th {
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-size: 9pt;
+            text-transform: uppercase;
+        }
+
+        thead th.number {
+            text-align: right;
+        }
+
+        tbody td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 9pt;
+        }
+
+        tbody td.number {
+            text-align: right;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .totals {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+
+        .totals-table {
+            width: 250px;
+        }
+
+        .totals-table tr td {
+            padding: 8px;
+            border: none;
+        }
+
+        .totals-table tr td:first-child {
+            text-align: right;
+            color: #666;
+        }
+
+        .totals-table tr td:last-child {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .totals-table tr.total {
+            border-top: 2px solid #2c3e50;
+        }
+
+        .totals-table tr.total td {
+            font-size: 12pt;
+            color: #2c3e50;
+        }
+
+        .notes {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 3px solid #2c3e50;
+        }
+
+        .notes h4 {
+            font-size: 9pt;
+            color: #999;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .optional-texts {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .optional-texts p {
+            font-size: 9pt;
+            color: #666;
+            margin-bottom: 8px;
+            white-space: pre-line;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 8pt;
+            color: #999;
+            padding: 10px;
+        }
+
+        {% block extra_styles %}{% endblock %}
+    </style>
+</head>
+<body>
+    {% block content %}{% endblock %}
+</body>
+</html>
