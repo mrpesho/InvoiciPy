@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-VERSION=$(grep -oP '__version__\s*=\s*"\K[^"]+' app/__init__.py)
+VERSION=$(awk -F'"' '/__version__/ {print $2}' app/__init__.py)
 
 if [ -z "$VERSION" ]; then
     echo "Error: Could not extract version from app/__init__.py"
